@@ -1,0 +1,101 @@
+############# tạo storage class
+Add the stable repository in Helm repo and update
+
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm repo update
+
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm search repo nfs-subdir
+WARNING: Kubernetes configuration file is group-readable. This is insecure. Location: /home/anhpt8/.kube/config
+WARNING: Kubernetes configuration file is world-readable. This is insecure. Location: /home/anhpt8/.kube/config
+NAME                                              	CHART VERSION	APP VERSION	DESCRIPTION                                       
+nfs-subdir-external-provisioner/nfs-subdir-exte...	4.0.18       	4.0.2      	nfs-subdir-external-provisioner is an automatic...
+
+
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm pull nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --version 4.0.18
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] tar -xzf nfs-subdir-external-provisioner-4.0.2.tgz
+
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] cp nfs-subdir-external-provisioner/values.yaml values-nfs-volume-delete.yaml
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] cp nfs-subdir-external-provisioner/values.yaml values-nfs-volume-retain.yaml
+
+############# Thực hiện chỉnh sửa file values-nfs-volume-delete.yaml
+nfs:
+  server: 10.24.28.87
+  path: /mnt/storage-k8s/data-delete
+  mountOptions:
+
+# For creating the StorageClass automatically:
+storageClass:
+  create: true
+
+  # Set a provisioner name. If unset, a name will be generated.
+  provisionerName: k8s-nfs-storage-delete
+
+  # Set StorageClass as the default StorageClass
+  # Ignored if storageClass.create is false
+  defaultClass: false
+
+  # Set a StorageClass name
+  # Ignored if storageClass.create is false
+  name: k8s-nfs-volume-delete
+
+  # Allow volume to be expanded dynamically
+  allowVolumeExpansion: true
+
+  # Method used to reclaim an obsoleted volume 
+  # reclaimPolicy: Retain  với gía trị này thì khi ta xóa PV, PVC thì dữ liệu sẽ bị xóa theo
+  reclaimPolicy: Delete
+
+  # When set to false your PVs will not be archived by the provisioner upon deletion of the PVC.
+  archiveOnDelete: false
+
+  # Set access mode - ReadWriteOnce, ReadOnlyMany or ReadWriteMany
+  accessModes: ReadWriteOnce
+
+############# Thực hiện chỉnh sửa file values-nfs-volume-retain.yaml
+nfs:
+  server: 10.24.28.87
+  path: /mnt/storage-k8s/data-retain
+  mountOptions:
+
+# For creating the StorageClass automatically:
+storageClass:
+  create: true
+
+  # Set a provisioner name. If unset, a name will be generated.
+  provisionerName: k8s-nfs-storage-retain
+
+  # Set StorageClass as the default StorageClass
+  # Ignored if storageClass.create is false
+  defaultClass: false
+
+  # Set a StorageClass name
+  # Ignored if storageClass.create is false
+  name: k8s-nfs-volume-retain
+
+  # Allow volume to be expanded dynamically
+  allowVolumeExpansion: true
+
+  # Method used to reclaim an obsoleted volume
+  # reclaimPolicy: Retain  với gía trị này thì khi ta xóa PV, PVC thì dữ liệu sẽ không bị xóa
+  reclaimPolicy: Retain
+
+  # When set to false your PVs will not be archived by the provisioner upon deletion of the PVC.
+  archiveOnDelete: true
+
+  # Set access mode - ReadWriteOnce, ReadOnlyMany or ReadWriteMany
+  accessModes: ReadWriteOnce
+
+
+######################### deploy StorageClass
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm -n storage-k8s install storage-nfs-delete -f values-nfs-volume-delete.yaml nfs-subdir-external-provisioner
+
+######################### deploy StorageClass
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] helm -n storage-k8s install storage-nfs-retain -f values-nfs-volume-retain.yaml nfs-subdir-external-provisioner
+
+
+####################### check StorageClass
+[anhpt8@pc1141:~/Desktop/k8s/helm-nfs$] kubectl get storageclass 
+NAME                    PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+k8s-nfs-volume-delete   k8s-nfs-storage-delete   Delete          Immediate           true                   22m
+k8s-nfs-volume-retain   k8s-nfs-storage-retain   Retain          Immediate           true                   2d20h
+

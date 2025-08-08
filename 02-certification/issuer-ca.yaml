@@ -1,0 +1,33 @@
+# 2.1 Bootstrap 1 self-signed ClusterIssuer để sinh Root CA
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}
+
+---
+# 2.2 Tạo Certificate là Root CA và lưu vào secret elk-root-ca (10 năm)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: elk-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: elk-root-ca
+  secretName: elk-root-ca
+  duration: 87600h         # ~10 năm
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: ClusterIssuer
+
+---
+# 2.3 Dùng Root CA trên làm ClusterIssuer chính cho toàn cụm
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: elk-ca-issuer
+spec:
+  ca:
+    secretName: elk-root-ca

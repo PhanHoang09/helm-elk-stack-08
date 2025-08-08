@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: elasticsearch-master-certs
+  namespace: elk-stack-08
+spec:
+  secretName: elasticsearch-master-certs        # gi nguyn tn secret ang dng
+  commonName: elasticsearch-master
+  dnsNames:
+    - elasticsearch-master
+    - elasticsearch-master.elk-stack-08
+    - elasticsearch-master.elk-stack-08.svc
+    - elasticsearch-master.elk-stack-08.svc.cluster.local
+  duration: 8760h       # 1 nm
+  renewBefore: 720h     # gia hn trc 30 ngy
+  issuerRef:
+    name: elk-ca-issuer
+    kind: ClusterIssuer
