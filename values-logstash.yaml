@@ -177,7 +177,8 @@ resources:
 
 volumeClaimTemplate:
   accessModes: ["ReadWriteOnce"]
-  storageClassName: k8s-nfs-volume-data-elk08
+  #storageClassName: k8s-nfs-volume-data-elk08
+  storageClassName: longhorn-storageclass-elk-retain
   resources:
     requests:
       storage: 10Gi
