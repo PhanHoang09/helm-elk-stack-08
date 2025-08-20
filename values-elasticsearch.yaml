@@ -1,4 +1,5 @@
 ---
+#helm --kube-context=rke2 -n elk-stack-08 upgrade elasticsearch -f values-elasticsearch.yaml elasticsearch/  --set sysctlInitContainer.enabled=false
 clusterName: "elasticsearch"
 nodeGroup: "master"
 
